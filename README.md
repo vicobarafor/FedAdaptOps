@@ -24,10 +24,6 @@ FedAdaptOps brings together non-IID federated training, per-client personalizati
 
 ![FedAdaptOps adaptive routing dashboard](docs/assets/dashboard_routing.png)
 
-### FastAPI run inspection service
-
-![FedAdaptOps FastAPI docs](docs/assets/api_docs.png)
-
 ---
 
 ## Why this project exists
