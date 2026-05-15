@@ -48,14 +48,18 @@ def dirichlet_partition(
     )
 
 
-def partition_summary(labels: list[int] | np.ndarray, partitions: dict[int, list[int]]) -> list[dict]:
+def partition_summary(
+    labels: list[int] | np.ndarray, partitions: dict[int, list[int]]
+) -> list[dict]:
     labels = np.asarray(labels)
     rows = []
     for client_id, indices in partitions.items():
         counts = Counter(labels[indices].tolist())
-        rows.append({
-            "client_id": client_id,
-            "num_samples": len(indices),
-            "class_counts": dict(sorted(counts.items())),
-        })
+        rows.append(
+            {
+                "client_id": client_id,
+                "num_samples": len(indices),
+                "class_counts": dict(sorted(counts.items())),
+            }
+        )
     return rows

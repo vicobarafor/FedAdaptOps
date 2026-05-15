@@ -5,22 +5,25 @@ from pathlib import Path
 from torch.utils.data import DataLoader, Dataset, Subset
 from torchvision import datasets, transforms
 
-
 CIFAR10_MEAN = (0.4914, 0.4822, 0.4465)
 CIFAR10_STD = (0.2470, 0.2435, 0.2616)
 
 
 def get_cifar10(data_dir: str | Path) -> tuple[Dataset, Dataset]:
-    train_tfms = transforms.Compose([
-        transforms.RandomCrop(32, padding=4),
-        transforms.RandomHorizontalFlip(),
-        transforms.ToTensor(),
-        transforms.Normalize(CIFAR10_MEAN, CIFAR10_STD),
-    ])
-    test_tfms = transforms.Compose([
-        transforms.ToTensor(),
-        transforms.Normalize(CIFAR10_MEAN, CIFAR10_STD),
-    ])
+    train_tfms = transforms.Compose(
+        [
+            transforms.RandomCrop(32, padding=4),
+            transforms.RandomHorizontalFlip(),
+            transforms.ToTensor(),
+            transforms.Normalize(CIFAR10_MEAN, CIFAR10_STD),
+        ]
+    )
+    test_tfms = transforms.Compose(
+        [
+            transforms.ToTensor(),
+            transforms.Normalize(CIFAR10_MEAN, CIFAR10_STD),
+        ]
+    )
 
     train = datasets.CIFAR10(root=str(data_dir), train=True, download=True, transform=train_tfms)
     test = datasets.CIFAR10(root=str(data_dir), train=False, download=True, transform=test_tfms)

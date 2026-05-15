@@ -7,7 +7,9 @@ import numpy as np
 import pandas as pd
 
 
-def client_partition_frame(labels: list[int] | np.ndarray, partitions: dict[int, list[int]]) -> pd.DataFrame:
+def client_partition_frame(
+    labels: list[int] | np.ndarray, partitions: dict[int, list[int]]
+) -> pd.DataFrame:
     labels = np.asarray(labels)
     rows = []
 
