@@ -44,7 +44,7 @@ def metric_card(label: str, value, help_text: str | None = None) -> None:
 
 def show_overview() -> None:
     st.title("FedAdaptOps")
-    st.caption("Production-style adaptive federated personalization observability dashboard")
+    st.caption("Research infrastructure dashboard for adaptive federated personalization experiments, policy evaluation, and resource-aware routing")
 
     run_dirs = list_run_dirs("runs")
     if not run_dirs:
