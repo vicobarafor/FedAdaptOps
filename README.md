@@ -1,67 +1,81 @@
 # FedAdaptOps
 
-**FedAdaptOps** is a production-style, deployment-aware ML systems platform prototype for **adaptive federated personalization under heterogeneous client resource constraints**.
+**FedAdaptOps** is research infrastructure for adaptive federated personalization: a modular ML systems platform for training, evaluating, routing, observing, and serving client-specific adaptation policies under heterogeneous resource constraints.
 
-It is designed as a flagship research engineering project: not a toy algorithm repo, but a modular system connecting reproducible federated experiments, personalization policies, resource-aware routing, observability dashboards, API serving, and local deployment.
+The project treats personalization as a systems decision problem:
 
-> **Central question:** How should AI systems dynamically choose personalization strategies across heterogeneous clients while balancing accuracy, compute cost, memory, latency, bandwidth, and resource constraints?
+> Which adaptation policy should each client receive, given its data distribution, compute budget, memory budget, latency constraint, bandwidth limit, and expected accuracy/cost tradeoff?
+
+FedAdaptOps brings together non-IID federated training, per-client personalization, resource simulation, adaptive policy routing, experiment observability, API serving, Docker deployment, CI, automated tests, and reproducible artifact management in one coherent research engineering system.
+
+---
 
 ## Why this project exists
 
-Most federated learning and personalization repositories focus on isolated algorithms or notebook experiments.
+Federated personalization is often presented as an algorithmic problem: implement FedAvg, fine-tune locally, report accuracy.
 
-FedAdaptOps instead asks a systems question:
+FedAdaptOps focuses on the infrastructure problem around that workflow.
 
-> What infrastructure is needed to evaluate, route, monitor, and serve adaptive personalization strategies across heterogeneous clients?
+Real adaptive ML systems need to answer questions like:
 
-The project combines:
+- How are non-IID client experiments made reproducible?
+- How are personalization policies compared across heterogeneous clients?
+- How are compute, memory, latency, bandwidth, and energy constraints represented?
+- How does a system decide between head-only adaptation, partial fine-tuning, and full fine-tuning?
+- How are routing decisions monitored, inspected, and served?
+- How can research runs be turned into inspectable artifacts, dashboards, APIs, and deployment interfaces?
 
-- **Research infrastructure thinking:** reproducibility, evaluation pipelines, experiment tracking, observability, modular tooling, reliable iteration loops.
-- **Resource-aware personalization thinking:** heterogeneous clients, compute budgets, memory limits, latency constraints, bandwidth limits, and efficient on-device adaptation.
+FedAdaptOps builds the surrounding research infrastructure needed to make adaptive personalization measurable, debuggable, and operationally inspectable.
 
-FedAdaptOps is not claiming big-tech-scale production readiness. It is intentionally framed as:
+---
 
-> **a production-style, deployment-aware ML systems platform prototype.**
+## System capabilities
 
-## Current capabilities
-
-### Federated training
+### Federated training infrastructure
 
 - CIFAR-10 loading
 - Dirichlet non-IID client partitioning
 - reproducible seed control
-- simulated clients
+- simulated federated clients
 - sampled-client FedAvg
 - sample-weighted aggregation
 - optional client dropout simulation
 - checkpointed global model
 - round-level and client-level metrics
+- persisted experiment artifacts
 
 ### Personalization engine
 
 - `head_only`
 - `partial_finetune`
 - `full_finetune`
-- layer freezing utilities
+- layer-freezing utilities
 - per-client personalization evaluation
+- policy-level accuracy and cost metrics
 - selector-ready `client_policy_metrics.csv`
 
-### Adaptive routing
+### Adaptive routing engine
 
 - metadata selector
 - resource-aware selector
 - oracle selector
 - simulated client resource profiles
-- compute, memory, latency, bandwidth, and energy budgets
+- compute, memory, latency, bandwidth, and energy constraints
 - selector recommendation artifacts
 - oracle headroom analysis
 
-### Dashboard, API, and deployment
+### Observability, API, and deployment
 
 - Streamlit dashboard for experiment observability
 - FastAPI service for run inspection and recommendations
 - Dockerfile and Docker Compose
-- pytest suite and GitHub Actions CI
+- GitHub Actions CI
+- pytest suite
+- ruff/black quality gates
+- reproducibility docs
+- API and deployment docs
+
+---
 
 ## Architecture
 
@@ -80,6 +94,39 @@ flowchart TD
     C --> J
     E --> J
 ```
+
+Core artifact flow:
+
+```text
+configs/
+  ↓
+scripts/train_fedavg.py
+  ↓
+runs/<fedavg_run_id>/
+  federated_round_metrics.csv
+  client_round_metrics.csv
+  checkpoints/global_round_best.pt
+
+scripts/personalize.py
+  ↓
+runs/<personalization_run_id>/
+  personalization_results.csv
+  client_policy_metrics.csv
+
+scripts/recommend_policies.py
+  ↓
+runs/<routing_run_id>/
+  client_resource_profiles.csv
+  selector_recommendations.csv
+  selector_summary.csv
+  oracle_headroom.csv
+
+dashboard/API
+  ↓
+read local run artifacts
+```
+
+---
 
 ## Repository structure
 
@@ -105,13 +152,16 @@ src/fedadaptops/
 tests/                           Unit and integration tests
 ```
 
+---
+
 ## Quickstart
+
+### 1. Create environment
 
 ```bash
 python -m venv .venv
 source .venv/bin/activate
 pip install -e ".[dev]"
-pytest
 ```
 
 Windows PowerShell:
@@ -120,31 +170,36 @@ Windows PowerShell:
 python -m venv .venv
 .venv\Scripts\Activate.ps1
 pip install -e ".[dev]"
-pytest
 ```
 
-## End-to-end demo
+### 2. Run quality checks
 
-### 1. Run FedAvg
+```bash
+pytest
+ruff check .
+black --check .
+```
+
+### 3. Run FedAvg
 
 ```bash
 python scripts/train_fedavg.py --config configs/cifar10_fedavg.yaml
 ```
 
-### 2. Run personalization
+### 4. Run personalization
 
 ```bash
 python scripts/personalize.py --config configs/cifar10_personalization.yaml
 ```
 
-For serious runs, set `personalization.checkpoint_path` in `configs/cifar10_personalization.yaml` to:
+To personalize from a trained global model, set `personalization.checkpoint_path` in `configs/cifar10_personalization.yaml`:
 
 ```yaml
 personalization:
   checkpoint_path: runs/<fedavg_run_id>/checkpoints/global_round_best.pt
 ```
 
-### 3. Run adaptive routing
+### 5. Run adaptive routing
 
 Edit `configs/cifar10_routing.yaml`:
 
@@ -159,7 +214,7 @@ Then run:
 python scripts/recommend_policies.py --config configs/cifar10_routing.yaml
 ```
 
-### 4. Launch dashboard
+### 6. Launch dashboard
 
 ```bash
 python scripts/launch_dashboard.py
@@ -171,7 +226,7 @@ Open:
 http://localhost:8501
 ```
 
-### 5. Launch API
+### 7. Launch API
 
 ```bash
 python scripts/serve_api.py
@@ -183,7 +238,9 @@ Open:
 http://localhost:8000/docs
 ```
 
-## Docker
+---
+
+## Docker deployment
 
 ```bash
 docker compose up --build
@@ -197,30 +254,39 @@ API docs:   http://localhost:8000/docs
 Dashboard: http://localhost:8501
 ```
 
+---
+
 ## Run artifacts
 
 FedAdaptOps uses local artifact directories as the system backbone.
 
-FedAvg:
+### FedAvg run
 
 ```text
 runs/<run_id>/
+  config.yaml
+  environment.json
+  run_metadata.json
+  client_partitions.json
+  partition_summary.csv
   federated_round_metrics.csv
   client_round_metrics.csv
   selected_clients.json
+  summary.json
   checkpoints/global_round_best.pt
 ```
 
-Personalization:
+### Personalization run
 
 ```text
 runs/<run_id>/
   personalization_results.csv
   client_policy_metrics.csv
   personalization_summary.json
+  summary.json
 ```
 
-Routing:
+### Routing run
 
 ```text
 runs/<run_id>/
@@ -229,45 +295,53 @@ runs/<run_id>/
   selector_summary.csv
   oracle_headroom.csv
   routing_summary.json
+  summary.json
 ```
 
-## What this project demonstrates
+The dashboard and API read these artifacts directly.
 
-- ML research infrastructure design
-- reproducible experimentation
-- modular federated learning systems
-- adaptive personalization policy evaluation
-- multi-objective routing under resource constraints
-- observability and monitoring surfaces
-- API-based experiment inspection
-- deployment-aware engineering
-- testing and documentation discipline
+---
 
-## Limitations
+## Engineering signals
 
-This is a local prototype, not a cloud-scale production system.
+FedAdaptOps demonstrates:
 
-Current limitations:
+- reproducible ML experiment infrastructure
+- config-driven execution
+- deterministic non-IID client simulation
+- modular federated training abstractions
+- per-client personalization policy evaluation
+- resource-aware decision systems
+- multi-objective routing under deployment constraints
+- oracle upper-bound comparison
+- experiment observability
+- API-based run inspection
+- Dockerized local deployment
+- automated testing and CI
+- documentation discipline
 
-- CIFAR-10 and SimpleCNN are used for fast iteration.
-- Client simulation is local, not distributed across real devices.
-- Resource profiles are simulated.
-- Selector policies are heuristic/oracle baselines, not learned routing models yet.
-- Security, authentication, and cloud deployment are out of scope.
+---
 
-## Future work
+## Scope and extension path
 
-- learned routing policies
-- contextual bandit selector
-- richer resource model
-- W&B or MLflow integration
-- additional datasets/models
-- privacy-aware metrics
-- experiment comparison UI
-- cloud deployment recipe
-- asynchronous job execution
-- SQLite run registry
+FedAdaptOps currently uses CIFAR-10 and a compact CNN to keep experiments fast, reproducible, and easy to inspect while exercising the full platform workflow.
 
-## CV bullet
+The system is designed around stable interfaces rather than one-off experiments:
 
-Built **FedAdaptOps**, a production-style adaptive federated personalization platform supporting non-IID client simulation, sampled-client FedAvg, resource-aware client routing, configurable personalization policies, oracle headroom analysis, Streamlit observability dashboards, FastAPI run inspection, Dockerized local deployment, automated testing, and reproducible ML infrastructure workflows.
+- config-driven execution
+- deterministic non-IID partitioning
+- persistent run artifacts
+- client-level metrics
+- policy-level personalization results
+- resource profile simulation
+- selector recommendation outputs
+- dashboard/API ingestion
+- Docker-based local deployment
+
+Natural extensions include learned routing policies, contextual bandit selectors, richer resource models, additional datasets/models, MLflow or W&B integration, cloud execution, asynchronous jobs, and a persistent run registry.
+
+---
+
+## Status
+
+FedAdaptOps is under active development as a flagship ML research engineering project.
