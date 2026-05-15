@@ -1,0 +1,31 @@
+project:
+  name: FedAdaptOps
+  run_name: cifar10_phase1_foundation
+  output_dir: runs
+
+seed: 42
+
+data:
+  dataset: CIFAR10
+  data_dir: data
+  num_clients: 20
+  dirichlet_alpha: 0.3
+  min_samples_per_client: 50
+  batch_size: 64
+  num_workers: 2
+
+model:
+  name: SimpleCNN
+  num_classes: 10
+
+training:
+  device: auto
+  epochs: 2
+  lr: 0.001
+  weight_decay: 0.0001
+  log_every: 50
+  max_train_batches: null
+  max_eval_batches: null
+
+artifacts:
+  save_checkpoint: true

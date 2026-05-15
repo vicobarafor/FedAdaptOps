@@ -1,0 +1,34 @@
+project:
+  name: FedAdaptOps
+  run_name: cifar10_phase4_adaptive_routing
+  output_dir: runs
+
+seed: 42
+
+routing:
+  personalization_results_path: runs/20260515_085853_cifar10_phase3_personalization_9ce6de43/personalization_results.csv
+  selectors:
+    - metadata
+    - resource_aware
+    - oracle
+  target_accuracy_weight: 1.0
+  cost_weight: 0.35
+  latency_weight: 0.15
+  memory_weight: 0.15
+  bandwidth_weight: 0.05
+  clients_limit: null
+
+resources:
+  compute_budget_min: 0.20
+  compute_budget_max: 1.00
+  memory_budget_mb_min: 64
+  memory_budget_mb_max: 512
+  latency_budget_ms_min: 30
+  latency_budget_ms_max: 250
+  bandwidth_budget_mb_min: 1
+  bandwidth_budget_mb_max: 25
+  energy_budget_j_min: 5
+  energy_budget_j_max: 100
+
+artifacts:
+  save_environment: true

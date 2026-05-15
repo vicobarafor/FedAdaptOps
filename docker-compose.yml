@@ -1,0 +1,19 @@
+services:
+  api:
+    build: .
+    command: uvicorn fedadaptops.api.main:app --host 0.0.0.0 --port 8000
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./runs:/app/runs
+      - ./configs:/app/configs
+
+  dashboard:
+    build: .
+    command: streamlit run src/fedadaptops/dashboard/app.py --server.address 0.0.0.0 --server.port 8501
+    ports:
+      - "8501:8501"
+    volumes:
+      - ./runs:/app/runs
+    depends_on:
+      - api
