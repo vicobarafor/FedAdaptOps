@@ -2,8 +2,8 @@
 __pycache__/
 *.pyc
 
-data/
-runs/
+/data/
+/runs/
 *.pt
 *.pth
 
