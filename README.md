@@ -80,19 +80,76 @@ FedAdaptOps builds the surrounding research infrastructure needed to make adapti
 ## Architecture
 
 ```mermaid
-flowchart TD
-    A[Config-driven experiment] --> B[CIFAR-10 + non-IID partitioning]
-    B --> C[FedAvg training engine]
-    C --> D[Global checkpoint]
-    D --> E[Client personalization engine]
-    E --> F[Client policy metrics]
-    F --> G[Resource profile simulation]
-    G --> H[Adaptive routing selectors]
-    H --> I[Selector recommendations]
-    I --> J[Streamlit dashboard]
-    I --> K[FastAPI service]
-    C --> J
-    E --> J
+flowchart LR
+    subgraph EXP["Experiment Control Plane"]
+        CFG["YAML configs"]
+        SEED["Seed control"]
+        RUN["Run registry + artifact manager"]
+        META["Environment + metadata capture"]
+    end
+
+    subgraph DATA["Federated Data Simulation"]
+        CIFAR["CIFAR-10 loader"]
+        PART["Dirichlet non-IID partitioning"]
+        CLIENTS["Simulated client datasets"]
+    end
+
+    subgraph TRAIN["Federated Training Engine"]
+        SAMPLE["Client sampler"]
+        LOCAL["Local client trainer"]
+        AGG["Sample-weighted FedAvg aggregation"]
+        CKPT["Global checkpoint"]
+    end
+
+    subgraph PERS["Personalization Engine"]
+        H["Head-only adaptation"]
+        P["Partial fine-tuning"]
+        F["Full fine-tuning"]
+        PM["Client policy metrics"]
+    end
+
+    subgraph ROUTE["Adaptive Routing Layer"]
+        RES["Client resource profiles"]
+        META_SEL["Metadata selector"]
+        RA_SEL["Resource-aware selector"]
+        ORACLE["Oracle selector"]
+        REC["Policy recommendations"]
+        HEADROOM["Oracle headroom analysis"]
+    end
+
+    subgraph OBS["Observability + Serving"]
+        DASH["Streamlit dashboard"]
+        API["FastAPI service"]
+        DOCKER["Docker Compose deployment"]
+        CI["CI quality gate"]
+    end
+
+    CFG --> PART
+    SEED --> PART
+    RUN --> META
+    CIFAR --> PART --> CLIENTS
+    CLIENTS --> SAMPLE --> LOCAL --> AGG --> CKPT
+    CKPT --> H
+    CKPT --> P
+    CKPT --> F
+    H --> PM
+    P --> PM
+    F --> PM
+    PM --> RES
+    RES --> META_SEL
+    RES --> RA_SEL
+    PM --> ORACLE
+    META_SEL --> REC
+    RA_SEL --> REC
+    ORACLE --> HEADROOM
+    REC --> DASH
+    PM --> DASH
+    CKPT --> DASH
+    REC --> API
+    RUN --> API
+    API --> DOCKER
+    DASH --> DOCKER
+    CI --> DOCKER
 ```
 
 Core artifact flow:
